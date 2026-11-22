@@ -1,9 +1,9 @@
 {
   "action": {
     "default_icon": {
-      "128": "icon128.png",
-      "16": "icon16.png",
-      "48": "icon48.png"
+      "128": "icons/icon128.png",
+      "16": "icons/icon16.png",
+      "48": "icons/icon48.png"
     },
     "default_title": "55起始页"
   },
@@ -18,9 +18,9 @@
     "https://geocoding-api.open-meteo.com/*"
   ],
   "icons": {
-    "128": "icon128.png",
-    "16": "icon16.png",
-    "48": "icon48.png"
+    "128": "icons/icon128.png",
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png"
   },
   "manifest_version": 3,
   "name": "55起始页",

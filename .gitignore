@@ -2,5 +2,9 @@
 .workbuddy/
 *.genie
 
-# 发布素材里的隐私政策站点（已单独推送到 55-start-page-privacy 仓库）
-store-release/privacy-site/
+# 依赖与系统文件
+node_modules/
+__pycache__/
+*.pyc
+.DS_Store
+Thumbs.db

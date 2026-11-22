@@ -1,0 +1,10 @@
+{
+  "name": "55-start-page",
+  "version": "1.0.20",
+  "private": true,
+  "description": "A customizable Chrome new-tab start page with search, weather, bookmarks and wallpaper (Manifest V3).",
+  "scripts": {
+    "test": "node --test tests/bookmark-drag.test.cjs",
+    "build": "python scripts/build.py"
+  }
+}

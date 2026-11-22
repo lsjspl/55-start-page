@@ -68,7 +68,7 @@ function fixture({ reducedMotion = false } = {}) {
     window: { matchMedia: () => ({ matches: reducedMotion }) },
     localStorage: { setItem: (key, value) => writes.push({ key, value: JSON.parse(value) }) }
   });
-  let source = fs.readFileSync(path.join(__dirname, '..', 'script.js'), 'utf8');
+  let source = fs.readFileSync(path.join(__dirname, '..', 'src', 'script.js'), 'utf8');
   source = source.replace("  if (document.readyState === 'loading') {", `
     globalThis.dragTest = {
       setup: function (items, drag) { bookmarks = items; pointerDrag = drag; draggingIndex = 0; },
