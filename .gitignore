@@ -1,0 +1,6 @@
+# WorkBuddy 内部数据 / 会话标记文件
+.workbuddy/
+*.genie
+
+# 发布素材里的隐私政策站点（已单独推送到 55-start-page-privacy 仓库）
+store-release/privacy-site/

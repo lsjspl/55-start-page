@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>55起始页</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- 背景层：默认壁纸 wallpaper.jpg，可在设置里换图、调模糊和亮度 -->
+  <div id="bg" aria-hidden="true"></div>
+  <div id="bgOverlay" aria-hidden="true"></div>
+
+  <main class="page">
+    <!-- 顶部：时钟 + 日期 -->
+    <header class="topbar">
+      <div class="clock-wrap">
+        <div id="clock">--:--</div>
+        <div id="dateText">加载中…</div>
+      </div>
+      <div class="top-actions">
+        <button id="doneEditBtn" class="btn primary edit-done-btn hidden">完成</button>
+      <button id="settingsBtn" class="icon-btn" title="设置" aria-label="设置"><svg class="icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg></button>
+      </div>
+    </header>
+
+    <!-- 搜索框 -->
+    <section class="search-section">
+      <form id="searchForm" autocomplete="off">
+        <div class="custom-select" id="engineDropdown">
+          <button type="button" id="engineSelectBtn" class="engine-btn" aria-haspopup="listbox" aria-expanded="false" aria-label="搜索引擎"><span id="engineSelectLabel">Google</span><svg class="icon-svg chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button>
+          <ul id="engineMenu" class="custom-menu" role="listbox" aria-label="搜索引擎" hidden></ul>
+        </div>
+        <input id="searchInput" type="text" placeholder="输入搜索内容" aria-label="搜索内容">
+        <button id="searchBtn" type="submit" aria-label="搜索"><svg class="icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg></button>
+      </form>
+    </section>
+
+    <div class="content">
+      <!-- 左侧：天气卡片 -->
+      <aside class="weather-card glass" aria-label="天气">
+        <div class="weather-head">
+          <span id="weatherCity">北京市</span>
+          <button id="weatherRefresh" class="mini-btn" title="刷新天气"><svg class="icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/></svg></button>
+        </div>
+        <div class="weather-main">
+          <span id="weatherIcon" class="weather-icon"><svg class="icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg></span>
+          <span><span id="weatherTemp">--</span><span class="unit">°C</span></span>
+        </div>
+        <div id="weatherDesc" class="weather-desc">晴朗</div>
+        <div id="weatherDetail" class="weather-detail">湿度 --% · 风速 -- km/h</div>
+        <div class="weather-foot">今日天气 · 数据来自 Open-Meteo</div>
+      </aside>
+
+      <!-- 中间：书签墙 -->
+      <section class="bookmarks-section">
+        <div id="bookmarksGrid" class="bookmarks-grid"></div>
+        <button id="addBtn" class="add-tile" title="添加书签">
+          <span class="add-plus"><svg class="icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="M12 5v14"/></svg></span>
+          <span>添加</span>
+        </button>
+      </section>
+
+    </div>
+
+    <footer class="footer">55起始页 · 精美、轻快、不收集任何数据</footer>
+  </main>
+
+  <!-- 添加 / 编辑书签弹窗 -->
+  <div id="modal" class="modal hidden" role="dialog" aria-modal="true">
+    <div class="modal-card glass">
+      <h2 id="modalTitle">添加书签</h2>
+      <label>名称<input id="siteName" type="text" placeholder="例如：哔哩哔哩"></label>
+      <label>网址<input id="siteUrl" type="url" placeholder="例如：https://www.bilibili.com"></label>
+      <div class="modal-icon-row">
+        <span id="modalIconPreview" class="modal-icon-preview" aria-hidden="true"></span>
+        <button id="syncIconBtn" type="button" class="btn sync-btn"><svg class="icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/></svg><span>同步图标</span></button>
+      </div>
+      <p class="modal-tip">只填网址即可，图标会自动读取（Google / DuckDuckGo 图标服务，失败显示首字母）。图标不对时点“同步图标”重新读取。</p>
+      <div class="modal-actions">
+        <button id="deleteBookmark" class="btn danger hidden">删除</button>
+        <button id="cancelBookmark" class="btn ghost">取消</button>
+        <button id="saveBookmark" class="btn primary">保存</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 设置面板 -->
+  <div id="settingsBackdrop" class="settings-backdrop hidden" aria-hidden="true"></div>
+  <div id="settingsPanel" class="settings-panel glass hidden" role="dialog" aria-modal="true">
+    <div class="settings-head">
+      <h2>设置</h2>
+      <button id="closeSettings" class="icon-btn" aria-label="关闭设置"><svg class="icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button>
+    </div>
+
+    <div class="settings-grid">
+    <div class="field">
+      <span class="field-label">默认搜索引擎</span>
+      <div class="custom-select custom-select--field" id="engineSettingDropdown">
+        <button type="button" id="engineSettingBtn" class="custom-select-btn" aria-haspopup="listbox" aria-expanded="false"><span id="engineSettingLabel">Google</span><svg class="icon-svg chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button>
+        <ul id="engineSettingMenu" class="custom-menu" role="listbox" aria-label="默认搜索引擎" hidden></ul>
+      </div>
+    </div>
+
+    <div class="field">
+      <label class="field-label" for="citySearchInput">天气城市</label>
+      <div class="custom-select custom-select--field" id="cityDropdown">
+        <input id="citySearchInput" class="custom-select-btn city-search-input" type="search"
+          role="combobox" aria-autocomplete="list" aria-controls="cityMenu" aria-expanded="false"
+          autocomplete="off" placeholder="搜索全球城市" spellcheck="false">
+        <ul id="cityMenu" class="custom-menu city-results" role="listbox" aria-label="全球城市搜索结果" hidden></ul>
+      </div>
+      <p id="citySearchStatus" class="city-search-status" role="status" aria-live="polite">支持中文、英文及当地城市名称</p>
+    </div>
+    </div>
+
+    <div class="settings-grid">
+    <label class="field">壁纸模糊 <span id="blurValue">8px</span>
+      <input id="blurRange" type="range" min="0" max="20" step="1" value="8">
+    </label>
+
+    <label class="field">壁纸亮度 <span id="brightnessValue">100%</span>
+      <input id="brightnessRange" type="range" min="50" max="120" step="5" value="100">
+    </label>
+    </div>
+
+    <div class="settings-grid">
+    <label class="field">图标尺寸 <span id="iconSizeValue">64px</span>
+      <input id="iconSizeRange" type="range" min="48" max="88" step="4" value="64">
+    </label>
+    </div>
+
+    <div class="field">
+      <span class="field-label">换一张壁纸</span>
+      <div class="file-picker">
+        <label class="file-btn" for="wallpaperInput"><svg class="icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m17 8-5-5-5 5"/><path d="M12 3v12"/></svg>选择文件</label>
+        <span id="wallpaperFileName" class="file-name">未选择任何文件</span>
+        <input id="wallpaperInput" class="file-input-hidden" type="file" accept="image/*">
+      </div>
+    </div>
+    <p class="field-tip">上传的图片只保存在本机浏览器里，不会上传到任何服务器。</p>
+
+    <div class="settings-actions">
+      <button id="resetWallpaper" class="btn ghost">恢复默认壁纸</button>
+      <button id="resetAll" class="btn danger">恢复全部默认</button>
+    </div>
+  </div>
+
+  <!-- 拖到底部删除：仅拖拽书签时显示 -->
+  <div id="deleteZone" class="delete-zone" aria-hidden="true"><svg class="icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M10 11v6"/><path d="M14 11v6"/></svg><span>拖到这里删除</span></div>
+
+  <!-- 书签右键菜单：仅在书签上右键时显示 -->
+  <div id="contextMenu" class="context-menu hidden" role="menu" aria-label="书签菜单">
+    <button type="button" class="context-menu-item" data-action="edit"><svg class="icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"/><path d="m15 5 4 4"/></svg><span>编辑</span></button>
+    <button type="button" class="context-menu-item" data-action="open"><svg class="icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><path d="M15 3h6v6"/><path d="M10 14 21 3"/></svg><span>在新标签页中打开</span></button>
+    <button type="button" class="context-menu-item danger" data-action="delete"><svg class="icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M10 11v6"/><path d="M14 11v6"/></svg><span>删除</span></button>
+  </div>
+
+  <div id="toast" class="toast hidden"></div>
+  <script src="script.js"></script>
+</body>
+</html>

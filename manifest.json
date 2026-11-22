@@ -1,0 +1,32 @@
+{
+  "action": {
+    "default_icon": {
+      "128": "icon128.png",
+      "16": "icon16.png",
+      "48": "icon48.png"
+    },
+    "default_title": "55起始页"
+  },
+  "chrome_url_overrides": {
+    "newtab": "newtab.html"
+  },
+  "description": "精美的新标签页：搜索、天气、书签墙、壁纸，书签图标自动读取。",
+  "host_permissions": [
+    "https://www.google.com/s2/favicons/*",
+    "https://icons.duckduckgo.com/*",
+    "https://api.open-meteo.com/*",
+    "https://geocoding-api.open-meteo.com/*"
+  ],
+  "icons": {
+    "128": "icon128.png",
+    "16": "icon16.png",
+    "48": "icon48.png"
+  },
+  "manifest_version": 3,
+  "name": "55起始页",
+  "permissions": [
+    "storage"
+  ],
+  "short_name": "55起始页",
+  "version": "1.0.20"
+}
