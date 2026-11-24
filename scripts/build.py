@@ -3,7 +3,7 @@
 
 The archive root is src/, so manifest.json sits at the top level of the zip
 (required by Chrome). The file name is derived from manifest.json's version,
-e.g. dist/55-start-page-1.0.20.zip.
+e.g. dist/55-start-page-1.0.21.zip.
 """
 import json
 import os

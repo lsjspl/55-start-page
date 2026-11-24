@@ -3,7 +3,7 @@
 一个可高度自定义的 Chrome 新标签页扩展（Manifest V3）。打开新标签页即可使用搜索、天气、书签墙和壁纸，书签图标会自动读取。
 
 - 商店名称：55起始页 / 55 Start Page
-- 当前版本：1.0.20
+- 当前版本：1.0.21
 - 隐私政策：https://lsjspl.github.io/55-start-page/
 
 ## 功能
@@ -11,6 +11,8 @@
 - 多搜索引擎切换（Google / Bing / 百度 / 搜狗 / DuckDuckGo）
 - 实时天气（Open-Meteo，支持城市搜索与 GPS 定位）
 - 可拖拽排序的书签墙，支持新增、编辑、删除、图标同步
+- 默认的 14 个网站图标内置，可离线显示；新增书签依次尝试 Favicon.so、彩虹图标服务和网站自身图标，全部失败时显示首字母
+- 从图标服务获取的图片保存到本地，下次打开无需联网；手动同步成功后更新缓存，失败时保留旧图。缓存图片最大 128px、总量上限 2MB，超过时清理最早的图片。网站自身图标若禁止跨域读取，仍可显示，但无法保存其图片内容
 - 自定义壁纸、模糊度与亮度
 - 所有设置与书签保存在本地 `chrome.storage`，不上传服务器
 
@@ -24,16 +26,19 @@
 │   ├── script.js             # 交互逻辑
 │   ├── style.css             # 样式
 │   ├── wallpaper.jpg         # 默认壁纸
-│   └── icons/                # 扩展图标 16/48/128
+│   └── icons/                # 扩展图标 16/48/128 与 sites/ 内置网站图标
 ├── dist/                     # 打包产物
-│   └── 55-start-page-1.0.20.zip
+│   └── 55-start-page-1.0.21.zip
 ├── tests/                    # 单元测试（Node 内置 test runner）
-│   └── bookmark-drag.test.cjs
+│   ├── bookmark-drag.test.cjs
+│   └── favicon.test.cjs
 ├── scripts/
 │   └── build.py              # 从 src/ 生成 dist/ 压缩包
 ├── docs/                     # GitHub Pages 站点（隐私政策页面）
 │   └── index.html
 ├── store-release/            # Chrome 商店发布素材
+│   ├── icon-source.png       # 用户选定的透明图标原图（五条彩色胶囊线）
+│   ├── icon512.png           # 512×512 透明图标，供预览和素材导出
 │   ├── 00-后台逐项照填.md     # 后台逐字段填写对照表
 │   ├── 01-商店文案.md         # 名称/简介/详细描述/权限理由
 │   ├── 02-隐私政策.html       # 隐私政策源文件（同步到 docs/）
@@ -58,7 +63,7 @@
 ```bash
 npm test
 # 或
-node --test tests/
+node --test tests/bookmark-drag.test.cjs tests/favicon.test.cjs
 ```
 
 ## 打包

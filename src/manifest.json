@@ -12,8 +12,8 @@
   },
   "description": "精美的新标签页：搜索、天气、书签墙、壁纸，书签图标自动读取。",
   "host_permissions": [
-    "https://www.google.com/s2/favicons/*",
-    "https://icons.duckduckgo.com/*",
+    "https://favicon.cccyun.cc/*",
+    "https://favicon.so/*",
     "https://api.open-meteo.com/*",
     "https://geocoding-api.open-meteo.com/*"
   ],
@@ -28,5 +28,5 @@
     "storage"
   ],
   "short_name": "55起始页",
-  "version": "1.0.20"
+  "version": "1.0.21"
 }

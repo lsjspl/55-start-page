@@ -47,7 +47,7 @@
   }
 
   /* ---------- 默认数据 ---------- */
-  // 默认书签：来自用户截图里的网站，只存名字和网址，图标全部自动读取。
+  // 默认书签：来自用户截图里的网站，图标随扩展打包，可离线显示。
   var DEFAULT_BOOKMARKS = [
     { name: '百度', url: 'https://www.baidu.com' },
     { name: '谷歌', url: 'https://www.google.com' },
@@ -107,7 +107,7 @@
   var editMode = false; // 手机式编辑模式：全部书签显示删除角标并轻微抖动
   var contextMenuIndex = -1; // 右键菜单对应的书签下标，-1 = 菜单关闭
   var syncingIcon = false; // 图标同步进行中
-  var faviconCache = {}; // domain -> 可用的图标地址，存在 chrome.storage.local
+  var faviconCache = {}; // domain -> 内置路径或 PNG 图片缓存，存在 chrome.storage.local
   var engineDropdown = null, engineSettingDropdown = null, cityDropdown = null; // 自定义下拉菜单实例
 
   /* ---------- 自定义下拉菜单 ----------
@@ -380,14 +380,134 @@
   }
 
   /* ---------- 图标自动读取 ----------
-     优先级：① Google S2 favicons（sz=128）② DuckDuckGo 图标 ③ 失败则显示首字母彩色块。
-     <img> 加载失败会触发 onerror 逐级降级；成功的来源会记进 chrome.storage.local 缓存，
-     下次直接用，不用每次都试一遍。 */
-  function faviconCandidates(domain) {
-    return [
-      'https://www.google.com/s2/favicons?domain=' + encodeURIComponent(domain) + '&sz=128',
-      'https://icons.duckduckgo.com/ip3/' + encodeURIComponent(domain) + '.ico'
-    ];
+     默认网站使用内置图标；其他网站依次尝试 Favicon.so、彩虹和网站自身的 favicon.ico。
+     成功获取的图片缩放为最大 128px 的 PNG，保存在本地；再次打开时无需联网。
+     每个来源最多等 5 秒，全部失败则显示首字母。缓存总量限制为 2MB。 */
+  var FAVICON_CACHE_LIMIT = 2 * 1024 * 1024;
+  var BUILTIN_FAVICONS = {
+    'www.baidu.com': 'www.baidu.com.ico',
+    'www.google.com': 'www.google.com.png',
+    'www.douyin.com': 'www.douyin.com.ico',
+    'www.doubao.com': 'www.doubao.com.png',
+    'www.youtube.com': 'www.youtube.com.png',
+    'grok.com': 'grok.com.svg',
+    'gemini.google.com': 'gemini.google.com.png',
+    'chat.deepseek.com': 'chat.deepseek.com.svg',
+    'www.twitch.tv': 'www.twitch.tv.png',
+    'aistudio.google.com': 'aistudio.google.com.png',
+    'copilot.microsoft.com': 'copilot.microsoft.com.jpg',
+    'dash.cloudflare.com': 'dash.cloudflare.com.png',
+    'chatgpt.com': 'chatgpt.com.ico',
+    'muse.ai': 'muse.ai.ico'
+  };
+  function faviconCandidates(url, refresh) {
+    try {
+      var site = new URL(url);
+      if (site.protocol !== 'https:' && site.protocol !== 'http:') return [];
+      var list = [
+        'https://favicon.so/' + encodeURIComponent(site.hostname),
+        'https://favicon.cccyun.cc/' + encodeURIComponent(site.hostname),
+        site.origin + '/favicon.ico'
+      ];
+      var builtin = BUILTIN_FAVICONS[site.hostname];
+      if (typeof builtin === 'string') {
+        if (refresh) list.push('icons/sites/' + builtin);
+        else list.unshift('icons/sites/' + builtin);
+      }
+      return list;
+    } catch (e) { return []; }
+  }
+  function faviconSources(url) {
+    var list = faviconCandidates(url);
+    var domain = domainOf(url), cached = faviconCache[domain];
+    if (cached && typeof cached === 'object' && list.indexOf(cached.source) >= 0 &&
+        typeof cached.dataUrl === 'string' && /^data:image\/png;base64,[A-Za-z0-9+/=]+$/.test(cached.dataUrl) &&
+        cached.dataUrl.length <= 128 * 1024) {
+      return [cached.dataUrl].concat(list);
+    }
+    if (cached && list.indexOf(cached) >= 0) {
+      return [cached].concat(list.filter(function (source) { return source !== cached; }));
+    }
+    if (cached) {
+      delete faviconCache[domain];
+      storeSet('local', 'faviconCache', faviconCache);
+    }
+    return list;
+  }
+  function cacheFavicon(image, source, url) {
+    var domain = domainOf(url);
+    // 读取已缓存的图片无需重复写入，内置文件只保留路径。
+    if (!domain || source.indexOf('data:') === 0) return true;
+    if (source.indexOf('icons/sites/') === 0) {
+      if (faviconCache[domain] !== source) {
+        faviconCache[domain] = source;
+        storeSet('local', 'faviconCache', faviconCache);
+      }
+      return true;
+    }
+    try {
+      var canvas = document.createElement('canvas');
+      var scale = Math.min(1, 128 / Math.max(image.naturalWidth, image.naturalHeight));
+      canvas.width = Math.max(1, Math.round(image.naturalWidth * scale));
+      canvas.height = Math.max(1, Math.round(image.naturalHeight * scale));
+      canvas.getContext('2d').drawImage(image, 0, 0, canvas.width, canvas.height);
+      var dataUrl = canvas.toDataURL('image/png');
+      if (!/^data:image\/png;base64,[A-Za-z0-9+/=]+$/.test(dataUrl) || dataUrl.length > 128 * 1024) return false;
+      faviconCache[domain] = { source: source, dataUrl: dataUrl, updatedAt: Date.now() };
+      var domains = Object.keys(faviconCache).filter(function (key) { return key !== domain; });
+      domains.sort(function (a, b) {
+        return ((faviconCache[a] && faviconCache[a].updatedAt) || 0) - ((faviconCache[b] && faviconCache[b].updatedAt) || 0);
+      });
+      while (JSON.stringify(faviconCache).length > FAVICON_CACHE_LIMIT && domains.length) {
+        delete faviconCache[domains.shift()];
+      }
+      storeSet('local', 'faviconCache', faviconCache);
+      return true;
+    } catch (e) {
+      // 网站自身未允许跨域读取时仍可显示图片；保留已有本地缓存。
+      return false;
+    }
+  }
+  function loadFavicon(list, callback) {
+    var step = 0, done = false, timer = null, current = null;
+    function clearAttempt() {
+      clearTimeout(timer);
+      if (current) { current.onload = null; current.onerror = null; current = null; }
+    }
+    function finish(image, source) {
+      if (done) return;
+      done = true;
+      clearAttempt();
+      callback(image, source);
+    }
+    function next() {
+      if (done) return;
+      clearAttempt();
+      if (step >= list.length) { finish(null, null); return; }
+      var source = list[step++];
+      function attempt(allowRead) {
+        var probe = new Image();
+        current = probe;
+        probe.referrerPolicy = 'no-referrer';
+        if (allowRead) probe.crossOrigin = 'anonymous';
+        probe.onload = function () {
+          // 网站自身的 16px favicon 也是有效图标，不按尺寸拒绝。
+          if (probe.naturalWidth > 0 && probe.naturalHeight > 0) finish(probe, source);
+          else next();
+        };
+        probe.onerror = function () {
+          if (allowRead) {
+            probe.onload = null; probe.onerror = null;
+            attempt(false);
+          } else next();
+        };
+        probe.src = source;
+      }
+      timer = setTimeout(next, 5000);
+      attempt(/^https?:/.test(source));
+    }
+    next();
+    return function () { done = true; clearAttempt(); };
   }
   // 给名字挑一个柔和的底色（首字母兜底用）
   function letterColor(name) {
@@ -404,33 +524,17 @@
     span.style.background = letterColor(name || '?');
     iconBox.appendChild(span);
   }
-  function attachFavicon(img, iconBox, bookmark) {
-    var domain = domainOf(bookmark.url);
-    if (!domain) { letterFallback(iconBox, bookmark.name); return; }
-    var cached = faviconCache[domain];
-    var list = cached ? [cached].concat(faviconCandidates(domain).filter(function (u) { return u !== cached; }))
-                      : faviconCandidates(domain);
-    var step = 0;
-    img.onerror = function () {
-      step++;
-      if (step < list.length) {
-        img.src = list[step];
-      } else {
-        img.remove();
-        letterFallback(iconBox, bookmark.name);
-      }
-    };
-    img.onload = function () {
-      // Google S2 在域名无图标时会返回一张 16px 默认图；太小的图也算失败，继续降级。
-      if (img.naturalWidth <= 16 && img.naturalHeight <= 16 && step < list.length - 1) {
-        step++;
-        img.src = list[step];
-        return;
-      }
-      faviconCache[domain] = img.src;
-      storeSet('local', 'faviconCache', faviconCache);
-    };
-    img.src = list[0];
+  function attachFavicon(iconBox, bookmark) {
+    if (iconBox._cancelFavicon) iconBox._cancelFavicon();
+    letterFallback(iconBox, bookmark.name);
+    iconBox._cancelFavicon = loadFavicon(faviconSources(bookmark.url), function (image, source) {
+      if (!image) return;
+      image.alt = bookmark.name;
+      image.draggable = false;
+      iconBox.innerHTML = '';
+      iconBox.appendChild(image);
+      cacheFavicon(image, source, bookmark.url);
+    });
   }
 
   /* ---------- 长按进入手机式编辑模式 ----------
@@ -497,11 +601,7 @@
 
       var iconBox = document.createElement('span');
       iconBox.className = 'bookmark-icon';
-      var img = document.createElement('img');
-      img.alt = bm.name;
-      img.draggable = false;
-      attachFavicon(img, iconBox, bm);
-      iconBox.appendChild(img);
+      attachFavicon(iconBox, bm);
       var visual = document.createElement('span');
       visual.className = 'bookmark-visual';
 
@@ -728,16 +828,11 @@
     if (!box) return;
     var url = normaliseUrl($('siteUrl').value);
     var name = $('siteName').value.trim() || '?';
-    box.innerHTML = '';
-    if (!url || !domainOf(url)) { letterFallback(box, name); return; }
-    var img = document.createElement('img');
-    img.alt = name;
-    attachFavicon(img, box, { url: url, name: name });
-    box.appendChild(img);
+    attachFavicon(box, { url: url, name: name });
   }
 
-  /* 同步图标：先清掉该域名的缓存再按 Google S2 → DuckDuckGo 重新读取，
-     成功则更新预览和缓存，失败显示首字母；不保存书签、不关闭弹窗 */
+  /* 同步图标：跳过缓存重新读取，成功后替换图片；失败时保留旧缓存。
+     不保存书签、不关闭弹窗。 */
   function syncBookmarkIcon() {
     if (syncingIcon) return;
     var url = normaliseUrl($('siteUrl').value);
@@ -749,35 +844,28 @@
     btn.disabled = true;
     btn.classList.add('syncing');
     if (label) label.textContent = '同步中…';
-    delete faviconCache[domain];
-    storeSet('local', 'faviconCache', faviconCache);
-    var list = faviconCandidates(domain);
-    var step = 0, done = false;
-    var probe = new Image();
-    function finish(ok) {
-      if (done) return; done = true;
+    var preview = $('modalIconPreview');
+    if (preview && preview._cancelFavicon) preview._cancelFavicon();
+    loadFavicon(faviconCandidates(url, true), function (image, source) {
       syncingIcon = false;
       btn.disabled = false;
       btn.classList.remove('syncing');
       if (label) label.textContent = '同步图标';
-      if (ok) {
-        faviconCache[domain] = probe.src;
-        storeSet('local', 'faviconCache', faviconCache);
-        updateModalIconPreview();
+      var sameSite = domainOf(normaliseUrl($('siteUrl').value)) === domain;
+      if (image) {
+        cacheFavicon(image, source, url);
+        if (sameSite && preview) {
+          image.alt = $('siteName').value.trim() || '?';
+          image.draggable = false;
+          preview.innerHTML = '';
+          preview.appendChild(image);
+        }
         toast('图标已同步');
       } else {
-        var box = $('modalIconPreview');
-        if (box) letterFallback(box, $('siteName').value.trim() || '?');
-        toast('同步失败，已显示首字母图标');
+        if (sameSite) updateModalIconPreview();
+        toast(faviconCache[domain] ? '同步失败，已保留原图标' : '同步失败，已显示首字母图标');
       }
-    }
-    probe.onload = function () {
-      // Google S2 在域名无图标时会返回一张 16px 默认图；太小的图也算失败，继续降级
-      if (probe.naturalWidth <= 16 && probe.naturalHeight <= 16 && step < list.length - 1) { step++; probe.src = list[step]; return; }
-      finish(true);
-    };
-    probe.onerror = function () { step++; if (step < list.length) probe.src = list[step]; else finish(false); };
-    probe.src = list[0];
+    });
   }
   function closeModal() { $('modal').classList.add('hidden'); editingIndex = -1; }
 
